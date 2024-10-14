@@ -2,6 +2,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import math
+import scipy.stats as stats
+import numpy as np
+import statsmodels.api as sm
 
 # Load the CSV into a DataFrame
 df = pd.read_csv('MentalHealthSurvey.csv')
@@ -66,7 +69,7 @@ def makePlots():
 
     # Split activities by commas and flatten the list
     individual_activities_list = []
-    for activities in stress_relief_activities.dropna():  # Drop missing values
+    for activities in stress_relief_activities:
         individual_activities = [activity.strip() for activity in activities.split(',')]  # Split and remove extra spaces
         individual_activities_list.extend(individual_activities)  # Collect all individual activities
 
@@ -84,6 +87,159 @@ def makePlots():
     plt.savefig('stress_relief_activities_distribution_unique.png', dpi=300, bbox_inches='tight')
     print("Figures saved as 'stress_relief_activities_distribution_unique.png'")
 
+def isGenderAndSportsRelated():
+    # Crosstab between gender and sports_engagement
+    contingency_table = pd.crosstab(df['gender'], df['sports_engagement'])
+
+    # Chi-squared test
+    chi2, p, dof, expected = stats.chi2_contingency(contingency_table)
+
+    print(f"Chi-squared Statistic: {chi2}")
+    print(f"P-value: {p}")
+    print(f"Degrees of Freedom: {dof}")
+    print(f"Expected Frequencies: \n{expected}")
+
+    # If p < 0.05, we reject the null hypothesis (there is an association)
+    if p < 0.05:
+        print("There is a statistically significant association between gender and sports engagement.")
+    else:
+        print("No statistically significant association between gender and sports engagement.")
+
+def convertSleepToNumeric(sleep_data):
+    """
+    Converts sleep data from string ranges to their numeric midpoints.
+    Example: '4-6 hrs' -> 5.0
+    """
+    numeric_sleep = []
+    for entry in sleep_data:
+        if '-' in entry:
+            # Split the range and compute the midpoint
+            lower, upper = entry.replace('hrs', '').split('-')
+            midpoint = (float(lower) + float(upper)) / 2
+            numeric_sleep.append(midpoint)
+        else:
+            # If it's a single value (e.g., '6 hrs'), just take that value
+            numeric_sleep.append(float(entry.replace('hrs', '').strip()))
+    return np.array(numeric_sleep)
+
+def compareSleepByGender():
+    """
+    This function compares the average sleep hours between males and females 
+    using a t-test to check for a statistically significant difference.
+    
+    Returns:
+    None: Prints the t-statistic, p-value, and the interpretation of the result.
+    """
+    
+    # Filter sleep data for males and females, and convert to numeric
+    male_sleep_raw = df[df['gender'] == 'Male']['average_sleep']
+    female_sleep_raw = df[df['gender'] == 'Female']['average_sleep']
+
+    male_sleep = convertSleepToNumeric(male_sleep_raw)
+    female_sleep = convertSleepToNumeric(female_sleep_raw)
+
+    # T-test between male and female average sleep
+    t_stat, p_val = stats.ttest_ind(male_sleep, female_sleep)
+
+    print(f"T-statistic: {t_stat}")
+    print(f"P-value: {p_val}")
+
+    if p_val < 0.05:
+        print("There is a statistically significant difference in sleep hours between males and females.")
+    else:
+        print("No statistically significant difference in sleep hours between males and females.")
+
+def analyzeAcademicPressureDepressionCorrelation():
+    """
+    This function calculates the Pearson correlation between academic pressure 
+    and depression and checks for statistical significance.
+    
+    Returns:
+    None: Prints the Pearson correlation coefficient, p-value, and the interpretation of the result.
+    """
+    
+    # Convert relevant columns to numeric
+    academic_pressure = pd.to_numeric(df['academic_pressure'], errors='coerce')
+    depression = pd.to_numeric(df['depression'], errors='coerce')
+
+    # Pearson correlation
+    correlation, p_value = stats.pearsonr(academic_pressure, depression)
+
+    print(f"Pearson Correlation: {correlation}")
+    print(f"P-value: {p_value}")
+
+    if p_value < 0.05:
+        print("There is a statistically significant correlation between academic pressure and depression.")
+    else:
+        print("No statistically significant correlation between academic pressure and depression.")
+
+def compareSleepAcrossAcademicYears():
+    """
+    This function compares average sleep hours across different academic years 
+    using an ANOVA test to check for statistically significant differences.
+    
+    Returns:
+    None: Prints the F-statistic, p-value, and the interpretation of the result.
+    """
+
+    # Convert 'average_sleep' column to numeric values
+    df['average_sleep_numeric'] = convertSleepToNumeric(df['average_sleep'])
+    
+    # Group the data by academic year and extract the numeric sleep data
+    grouped_data = [df[df['academic_year'] == year]['average_sleep_numeric']
+                    for year in df['academic_year'].unique()]
+
+    # ANOVA test
+    f_stat, p_val = stats.f_oneway(*grouped_data)
+
+    print(f"F-statistic: {f_stat}")
+    print(f"P-value: {p_val}")
+
+    if p_val < 0.05:
+        print("There is a statistically significant difference in sleep hours across academic years.")
+    else:
+        print("No statistically significant difference in sleep hours across academic years.")
+
+def performLogisticRegression():
+    """
+    This function performs logistic regression to analyze the relationship 
+    between academic pressure, financial concerns, and depression.
+    
+    Returns:
+    None: Prints the summary of the logistic regression model.
+    """
+
+    # Recode 'depression' into a binary variable
+    threshold = 3  # Set threshold as needed
+    df['depression_binary'] = df['depression'].apply(lambda x: 1 if x >= threshold else 0)
+
+
+    # Convert relevant columns to numeric
+    df['depression_binary'] = pd.to_numeric(df['depression_binary'], errors='coerce')
+    df['academic_pressure'] = pd.to_numeric(df['academic_pressure'], errors='coerce')
+    df['financial_concerns'] = pd.to_numeric(df['financial_concerns'], errors='coerce')
+
+    # Select independent variables
+    X = df[['academic_pressure', 'financial_concerns']]
+    y = df['depression_binary']
+
+    # Add constant to the model (for intercept)
+    X = sm.add_constant(X)
+
+    # Fit the logistic regression model
+    model = sm.Logit(y, X)
+    result = model.fit()
+
+    # Print summary
+    print(result.summary())
+
+    # Note: A logisztikus regresszió eredményei azt mutatják, hogy mind az akadémiai nyomás, mind a pénzügyi aggodalmak jelentős hatással vannak a depresszióra.
+
 # Only call the functions you need for trying out. Comment out the ones you don't need
 # basicInfo()
-makePlots()
+# makePlots()
+isGenderAndSportsRelated()
+compareSleepByGender()
+analyzeAcademicPressureDepressionCorrelation()
+compareSleepAcrossAcademicYears()
+performLogisticRegression()
