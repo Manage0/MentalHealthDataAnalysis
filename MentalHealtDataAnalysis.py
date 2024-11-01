@@ -145,23 +145,23 @@ def compareSleepByGender():
     else:
         print("No statistically significant difference in sleep hour categories between males and females.")
 
-def analyzeAcademicPressureDepressionCorrelation():
+def analyzeAcademicPressureDepressionCorrelation(): 
     """
-    This function calculates the Pearson correlation between academic pressure 
+    This function calculates the Kendall Tau correlation between academic pressure 
     and depression and checks for statistical significance.
     
     Returns:
-    None: Prints the Pearson correlation coefficient, p-value, and the interpretation of the result.
+    None: Prints the Kendall Tau correlation coefficient, p-value, and the interpretation of the result.
     """
     
     # Convert relevant columns to numeric
     academic_pressure = pd.to_numeric(df['academic_pressure'], errors='coerce')
     depression = pd.to_numeric(df['depression'], errors='coerce')
 
-    # Pearson correlation
-    correlation, p_value = stats.pearsonr(academic_pressure, depression)
+    # Kendall Tau correlation
+    correlation, p_value = stats.kendalltau(academic_pressure, depression)
 
-    print(f"Pearson Correlation: {correlation}")
+    print(f"Kendall Tau Correlation: {correlation}")
     print(f"P-value: {p_value}")
 
     if p_value < 0.05:
@@ -235,7 +235,7 @@ def performLogisticRegression():
 # basicInfo()
 # makePlots()
 # isGenderAndSportsRelated()
-compareSleepByGender()
-# analyzeAcademicPressureDepressionCorrelation()
+# compareSleepByGender()
+analyzeAcademicPressureDepressionCorrelation()
 # compareSleepAcrossAcademicYears()
 # performLogisticRegression()
