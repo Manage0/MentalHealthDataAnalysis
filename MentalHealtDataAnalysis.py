@@ -124,30 +124,26 @@ def convertSleepToNumeric(sleep_data):
 
 def compareSleepByGender():
     """
-    This function compares the average sleep hours between males and females 
-    using a t-test to check for a statistically significant difference.
+    This function compares the distribution of sleep hours categories between males and females 
+    using the chi-square test of independence.
     
     Returns:
-    None: Prints the t-statistic, p-value, and the interpretation of the result.
+    None: Prints the chi-square statistic, p-value, and the interpretation of the result.
     """
     
-    # Filter sleep data for males and females, and convert to numeric
-    male_sleep_raw = df[df['gender'] == 'Male']['average_sleep']
-    female_sleep_raw = df[df['gender'] == 'Female']['average_sleep']
+    # Create a contingency table for gender and average_sleep
+    contingency_table = pd.crosstab(df['gender'], df['average_sleep'])
+    
+    # Perform chi-square test
+    chi2_stat, p_val, dof, expected = stats.chi2_contingency(contingency_table)
 
-    male_sleep = convertSleepToNumeric(male_sleep_raw)
-    female_sleep = convertSleepToNumeric(female_sleep_raw)
-
-    # T-test between male and female average sleep
-    t_stat, p_val = stats.ttest_ind(male_sleep, female_sleep)
-
-    print(f"T-statistic: {t_stat}")
+    print(f"Chi-square Statistic: {chi2_stat}")
     print(f"P-value: {p_val}")
 
     if p_val < 0.05:
-        print("There is a statistically significant difference in sleep hours between males and females.")
+        print("There is a statistically significant difference in sleep hour categories between males and females.")
     else:
-        print("No statistically significant difference in sleep hours between males and females.")
+        print("No statistically significant difference in sleep hour categories between males and females.")
 
 def analyzeAcademicPressureDepressionCorrelation():
     """
@@ -238,8 +234,8 @@ def performLogisticRegression():
 # Only call the functions you need for trying out. Comment out the ones you don't need
 # basicInfo()
 # makePlots()
-isGenderAndSportsRelated()
+# isGenderAndSportsRelated()
 compareSleepByGender()
-analyzeAcademicPressureDepressionCorrelation()
-compareSleepAcrossAcademicYears()
-performLogisticRegression()
+# analyzeAcademicPressureDepressionCorrelation()
+# compareSleepAcrossAcademicYears()
+# performLogisticRegression()
