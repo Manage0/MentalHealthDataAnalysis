@@ -244,8 +244,8 @@ def performLogisticRegression():
 # Only call the functions you need for trying out. Comment out the ones you don't need
 # basicInfo()
 # makePlots()
-# isGenderAndSportsRelated()
-# compareSleepByGender()
-# analyzeAcademicPressureDepressionCorrelation()
+isGenderAndSportsRelated()
+compareSleepByGender()
+analyzeAcademicPressureDepressionCorrelation()
 compareSleepAcrossAcademicYearsCramerV()
-# performLogisticRegression()
+performLogisticRegression()
