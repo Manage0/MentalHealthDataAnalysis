@@ -169,32 +169,42 @@ def analyzeAcademicPressureDepressionCorrelation():
     else:
         print("No statistically significant correlation between academic pressure and depression.")
 
-def compareSleepAcrossAcademicYears():
+def compareSleepAcrossAcademicYearsCramerV():
     """
-    This function compares average sleep hours across different academic years 
-    using an ANOVA test to check for statistically significant differences.
+    This function analyzes the association strength between academic year and average sleep hours
+    using Cramér's V statistic based on a Chi-square test.
     
     Returns:
-    None: Prints the F-statistic, p-value, and the interpretation of the result.
+    None: Prints the chi-square statistic, p-value, Cramér's V value, and interpretation.
     """
-
-    # Convert 'average_sleep' column to numeric values
-    df['average_sleep_numeric'] = convertSleepToNumeric(df['average_sleep'])
     
-    # Group the data by academic year and extract the numeric sleep data
-    grouped_data = [df[df['academic_year'] == year]['average_sleep_numeric']
-                    for year in df['academic_year'].unique()]
+    # Create a contingency table
+    sleep_academic_year_table = pd.crosstab(df['academic_year'], df['average_sleep'])
+    
+    # Perform Chi-square test
+    chi2_stat, p_val, dof, expected = stats.chi2_contingency(sleep_academic_year_table)
 
-    # ANOVA test
-    f_stat, p_val = stats.f_oneway(*grouped_data)
+    # Calculate Cramér's V
+    n = sleep_academic_year_table.sum().sum()  # total sample size
+    cramer_v = np.sqrt(chi2_stat / (n * (min(sleep_academic_year_table.shape) - 1)))
 
-    print(f"F-statistic: {f_stat}")
+    print(f"Chi-square Statistic: {chi2_stat}")
     print(f"P-value: {p_val}")
+    print(f"Cramér's V: {cramer_v}")
 
     if p_val < 0.05:
-        print("There is a statistically significant difference in sleep hours across academic years.")
+        print("There is a statistically significant association between academic year and sleep hours.")
     else:
-        print("No statistically significant difference in sleep hours across academic years.")
+        print("No statistically significant association between academic year and sleep hours.")
+
+    # Interpret Cramér's V strength
+    # Source: https://www.ibm.com/docs/hu/cognos-analytics/11.1.0?topic=terms-cramrs-v
+    if cramer_v <= 0.2:
+        print("The association is weak.")
+    elif cramer_v <= 0.6:
+        print("The association is moderate.")
+    else:
+        print("The association is strong.")
 
 def performLogisticRegression():
     """
@@ -236,6 +246,6 @@ def performLogisticRegression():
 # makePlots()
 # isGenderAndSportsRelated()
 # compareSleepByGender()
-analyzeAcademicPressureDepressionCorrelation()
-# compareSleepAcrossAcademicYears()
+# analyzeAcademicPressureDepressionCorrelation()
+compareSleepAcrossAcademicYearsCramerV()
 # performLogisticRegression()
